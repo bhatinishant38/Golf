@@ -6,7 +6,6 @@ import {
   Heart,
   Trophy,
   User,
-  Settings,
   LogOut,
 } from "lucide-react";
 
@@ -20,7 +19,7 @@ const mainLinks = [
 const accountLinks = [
   { to: "/userhome/winnings", label: "Winnings", icon: Trophy },
   { to: "/userhome/profile", label: "Profile", icon: User },
-  { to: "/userhome/settings", label: "Settings", icon: Settings },
+  
 ];
 
 const NavItem = ({ to, label, icon: Icon, end }) => (

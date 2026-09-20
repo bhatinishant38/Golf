@@ -12,7 +12,7 @@ import Draws from "./pages/ForUser/Draws";
 import Charity from "./pages/ForUser/Charity";
 import Winnings from "./pages/ForUser/Winnings";
 import Profile from "./pages/ForUser/Profile";
-import Setting from "./pages/ForUser/Setting";
+
 import { AppContext } from "./context/AppContext";
 import Scores from "./pages/ForUser/Scores";
 
@@ -36,7 +36,7 @@ const App = () => {
           <Route path="charity" element={<Charity />} />
           <Route path="winnings" element={<Winnings />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Setting />} />
+        
         </Route>
       </Routes>
     </>

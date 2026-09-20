@@ -89,3 +89,56 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
+
+export const getProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.userId).select("-password");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    return res.json({ success: true, user });
+  } catch (error) {
+    console.log(error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Could not load profile" });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, phone, gender, dob } = req.body;
+    if (!name?.trim()) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Name is required" });
+    }
+
+    const user = await userModel
+      .findByIdAndUpdate(
+        req.userId,
+        {
+          name: name.trim(),
+          phone: phone || "",
+          gender: gender || "Not selected",
+          dob: dob || null,
+        },
+        { new: true, runValidators: true },
+      )
+      .select("-password");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    return res.json({ success: true, user });
+  } catch (error) {
+    console.log(error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Could not update profile" });
+  }
+};
