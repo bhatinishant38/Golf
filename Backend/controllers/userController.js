@@ -92,7 +92,8 @@ export const loginUser = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const user = await userModel.findById(req.userId).select("-password");
+    const userId = req.userId
+    const user = await userModel.findById(userId).select("-password");
     if (!user) {
       return res
         .status(404)

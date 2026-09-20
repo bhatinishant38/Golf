@@ -1,10 +1,7 @@
 import jwt from "jsonwebtoken";
 
 export const authUser = (req, res, next) => {
-  const authorization = req.headers.authorization || "";
-  const token = authorization.startsWith("Bearer ")
-    ? authorization.slice(7)
-    : "";
+   const {token} = req.headers
 
   if (!token) {
     return res.status(401).json({ success: false, message: "Not authorized" });

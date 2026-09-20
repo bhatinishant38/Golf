@@ -1,37 +1,16 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import axios from "axios";
+import { useContext, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Camera } from "lucide-react";
 import { AppContext } from "../../context/AppContext";
 
 // ---- Helpers ----
 
-// Charity ids saved on the user -> names to show.
-// (Same ids as your Charity page. Move both to one shared file when you can.)
-const charityNames = {
-  "clean-water": "Clean Water for All",
-  "education-for-all": "Education for All",
-  "save-environment": "Save the Environment",
-  "health-wellness": "Health & Wellness",
-  "food-bank": "Community Food Bank",
-  "literacy-kids": "Literacy for Kids",
-  reforestation: "Reforestation Project",
-  "mental-health": "Mental Health Support",
-  "youth-mentorship": "Youth Mentorship",
-  "ocean-cleanup": "Ocean Cleanup Initiative",
-  "rural-clinic": "Rural Health Clinic",
-};
-
 const genderOptions = ["Not selected", "Male", "Female", "Other"];
 
-// Turn the user from the backend into the values our form uses
-const userToForm = (user) => ({
-  name: user.name || "",
-  phone: user.phone || "",
-  gender: user.gender || "Not selected",
-  // A date input needs "yyyy-mm-dd". Old users may have text like "Not Selected", so ignore that.
-  dob: /^\d{4}-\d{2}-\d{2}/.test(user.dob || "") ? user.dob.slice(0, 10) : "",
-});
+// The date input needs "yyyy-mm-dd". The backend sends a full date, so cut it down.
+// (Old values like "Not Selected" don't match, so they become empty.)
+const toDateInput = (dob) =>
+  /^\d{4}-\d{2}-\d{2}/.test(dob || "") ? dob.slice(0, 10) : "";
 
 const formatDate = (date) =>
   new Date(date).toLocaleDateString("en-GB", {
@@ -43,46 +22,30 @@ const formatDate = (date) =>
 const inputClass =
   "w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0B5D3B] focus:ring-2 focus:ring-emerald-100";
 
+// A label with a value (or an input) under it
+const Field = ({ label, children }) => (
+  <div>
+    <p className="mb-1 text-sm text-gray-500">{label}</p>
+    {children}
+  </div>
+);
+
 // ---- Page ----
 
-const Profile = () => {
-  const { token, backendUrl } = useContext(AppContext);
-  const [user, setUser] = useState(null); // what is saved on the server
-  const [form, setForm] = useState(userToForm({}));
-  const [imageFile, setImageFile] = useState(null); // a new photo the user picked
-  const [preview, setPreview] = useState(""); // preview of that new photo
-  const [loading, setLoading] = useState(true);
+const MyProfile = () => {
+  // Everything shared comes from the context
+  const { profileData, setProfileData, getUserProfile, updateProfile, charityNames } =
+    useContext(AppContext);
+
+  const [isEdit, setIsEdit] = useState(false);
+  const [image, setImage] = useState(null); // new photo the user picked
+  const [preview, setPreview] = useState(""); // preview of that photo
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
 
-  const api = backendUrl + "/api/user/profile";
-  const headers = { Authorization: `Bearer ${token}` };
-
-  // Load the profile once when the page opens
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const { data } = await axios.get(api, { headers });
-        if (data.success) {
-          setUser(data.user);
-          setForm(userToForm(data.user));
-        } else {
-          toast.error(data.message);
-        }
-      } catch (error) {
-        toast.error(
-          error.response?.data?.message || "Could not load your profile",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleChange = (event) => {
-    setForm({ ...form, [event.target.name]: event.target.value });
+  // Change one field of profileData while editing
+  const updateField = (field, value) => {
+    setProfileData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleImageChosen = (event) => {
@@ -98,264 +61,250 @@ const Profile = () => {
       return;
     }
 
-    setImageFile(file);
+    setImage(file);
     setPreview(URL.createObjectURL(file));
   };
 
-  // Has the user changed anything? Used to enable/disable the Save button.
-  const hasChanges =
-    user &&
-    (imageFile !== null ||
-      JSON.stringify(form) !== JSON.stringify(userToForm(user)));
-
-  const handleSave = async (event) => {
-    event.preventDefault();
-
-    if (!form.name.trim()) {
+  const handleSave = async () => {
+    // Quick checks before sending
+    if (!profileData.name.trim()) {
       toast.error("Name can't be empty.");
       return;
     }
-    if (form.phone && !/^\+?[0-9]{7,15}$/.test(form.phone)) {
+    if (profileData.phone && !/^\+?[0-9]{7,15}$/.test(profileData.phone)) {
       toast.error("Enter a valid phone number (digits only, 7 to 15 numbers).");
       return;
     }
-    if (form.dob && new Date(form.dob) > new Date()) {
+    if (profileData.dob && new Date(profileData.dob) > new Date()) {
       toast.error("Date of birth can't be in the future.");
       return;
     }
 
-    // FormData lets us send text and the image file together
     const formData = new FormData();
-    formData.append("name", form.name.trim());
-    formData.append("phone", form.phone);
-    formData.append("gender", form.gender);
-    formData.append("dob", form.dob);
-    if (imageFile) formData.append("image", imageFile);
+    formData.append("name", profileData.name.trim());
+    formData.append("phone", profileData.phone || "");
+    formData.append("dob", toDateInput(profileData.dob));
+    formData.append("gender", profileData.gender);
+    if (image) formData.append("image", image);
 
     setSaving(true);
-    try {
-      const { data } = await axios.put(api, formData, { headers });
-      if (data.success) {
-        toast.success("Profile updated");
-        setUser(data.user);
-        setForm(userToForm(data.user));
-        setImageFile(null);
-        setPreview("");
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
-    } finally {
-      setSaving(false);
+    const success = await updateProfile(formData); // the API call lives in the context
+    setSaving(false);
+
+    if (success) {
+      setImage(null);
+      setPreview("");
+      setIsEdit(false);
     }
   };
 
-  const handleCancel = () => {
-    setForm(userToForm(user));
-    setImageFile(null);
+  // Throw away edits: reload the saved data and leave edit mode
+  const handleCancel = async () => {
+    setImage(null);
     setPreview("");
+    setIsEdit(false);
+    await getUserProfile();
   };
 
-  if (loading) {
+  if (!profileData) {
     return (
       <p className="py-10 text-center text-sm text-gray-400">
         Loading your profile...
       </p>
     );
   }
-  if (!user) {
-    return (
-      <p className="py-10 text-center text-sm text-gray-400">
-        We couldn't load your profile. Please refresh the page.
-      </p>
-    );
-  }
 
-  const photo = preview || user.image;
+  const photo = preview || profileData.image;
   const isExpired =
-    user.subscriptionEnd && new Date(user.subscriptionEnd) < new Date();
+    profileData.subscriptionEnd &&
+    new Date(profileData.subscriptionEnd) < new Date();
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-xl font-bold text-[#0B5D3B]">My Profile</h1>
-      <p className="mb-6 text-sm text-gray-500">
-        Update your personal details.
-      </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-[#0B5D3B]">My Profile</h1>
+          <p className="text-sm text-gray-500">
+            {isEdit ? "Update your details, then save." : "Your personal details."}
+          </p>
+        </div>
 
-      {/* Personal details (editable) */}
-      <form
-        onSubmit={handleSave}
-        className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm"
-      >
-        {/* Photo */}
+        {/* Edit / Save / Cancel buttons */}
+        {isEdit ? (
+          <div className="flex gap-3">
+            <button
+              onClick={handleCancel}
+              disabled={saving}
+              className="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="rounded-lg bg-[#0B5D3B] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#094d31] disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save changes"}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsEdit(true)}
+            className="rounded-lg bg-[#0B5D3B] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#094d31]"
+          >
+            Edit profile
+          </button>
+        )}
+      </div>
+
+      {/* Personal details */}
+      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        {/* Photo and name */}
         <div className="mb-6 flex items-center gap-5">
-          <div className="relative">
+          <div className="relative shrink-0">
             {photo ? (
               <img
                 src={photo}
-                alt={user.name}
+                alt={profileData.name}
                 className="h-24 w-24 rounded-full object-cover"
               />
             ) : (
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#0B5D3B] text-3xl font-semibold text-white">
-                {user.name?.[0]?.toUpperCase()}
+                {profileData.name?.[0]?.toUpperCase()}
               </div>
             )}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current.click()}
-              aria-label="Change photo"
-              className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#0B5D3B] text-white hover:bg-[#094d31]"
-            >
-              <Camera size={14} />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".png,.jpg,.jpeg,.webp"
-              onChange={handleImageChosen}
-              className="hidden"
-            />
+
+            {/* Camera button only shows while editing */}
+            {isEdit && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  aria-label="Change photo"
+                  className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#0B5D3B] text-white hover:bg-[#094d31]"
+                >
+                  <Camera size={14} />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.webp"
+                  onChange={handleImageChosen}
+                  className="hidden"
+                />
+              </>
+            )}
           </div>
 
-          <div>
-            <p className="font-semibold text-gray-900">{user.name}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
-            <p className="mt-1 text-xs text-gray-400">
-              PNG, JPG or WebP, up to 2 MB
-            </p>
-          </div>
-        </div>
-
-        {/* Fields */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Full name
-            </label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Phone
-            </label>
-            <input
-              name="phone"
-              type="tel"
-              value={form.phone}
-              onChange={handleChange}
-              placeholder="e.g. 9876543210"
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Gender
-            </label>
-            <select
-              name="gender"
-              value={form.gender}
-              onChange={handleChange}
-              className={inputClass}
-            >
-              {genderOptions.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Date of birth
-            </label>
-            <input
-              name="dob"
-              type="date"
-              value={form.dob}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={handleChange}
-              className={inputClass}
-            />
-          </div>
-
-          {/* Email is shown but can't be changed */}
-          <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              value={user.email}
-              disabled
-              className={`${inputClass} cursor-not-allowed bg-gray-50 text-gray-500`}
-            />
+          <div className="min-w-0 flex-1">
+            {isEdit ? (
+              <input
+                type="text"
+                value={profileData.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                className={`${inputClass} max-w-xs text-lg font-semibold`}
+              />
+            ) : (
+              <p className="text-2xl font-bold text-gray-900">{profileData.name}</p>
+            )}
+            <p className="mt-1 truncate text-sm text-gray-500">{profileData.email}</p>
+            {isEdit && (
+              <p className="mt-1 text-xs text-gray-400">
+                Photo: PNG, JPG or WebP, up to 2 MB
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={!hasChanges || saving}
-            className="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!hasChanges || saving}
-            className="rounded-lg bg-[#0B5D3B] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#094d31] disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save changes"}
-          </button>
-        </div>
-      </form>
+        <hr className="mb-6 border-gray-100" />
 
-      {/* Subscription and charity (read only) */}
+        {/* Details */}
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Phone">
+            {isEdit ? (
+              <input
+                type="tel"
+                value={profileData.phone || ""}
+                placeholder="e.g. 9876543210"
+                onChange={(e) => updateField("phone", e.target.value)}
+                className={inputClass}
+              />
+            ) : (
+              <p className="font-medium text-gray-900">
+                {profileData.phone || "Not added"}
+              </p>
+            )}
+          </Field>
+
+          <Field label="Gender">
+            {isEdit ? (
+              <select
+                value={profileData.gender}
+                onChange={(e) => updateField("gender", e.target.value)}
+                className={inputClass}
+              >
+                {genderOptions.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="font-medium text-gray-900">{profileData.gender}</p>
+            )}
+          </Field>
+
+          <Field label="Date of birth">
+            {isEdit ? (
+              <input
+                type="date"
+                value={toDateInput(profileData.dob)}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => updateField("dob", e.target.value)}
+                className={inputClass}
+              />
+            ) : (
+              <p className="font-medium text-gray-900">
+                {toDateInput(profileData.dob) ? formatDate(profileData.dob) : "Not added"}
+              </p>
+            )}
+          </Field>
+
+          <Field label="Email">
+            <p className="font-medium text-gray-900">{profileData.email}</p>
+          </Field>
+        </div>
+      </div>
+
+      {/* Subscription and charity (view only) */}
       <div className="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 font-semibold text-gray-900">
-          Subscription & charity
-        </h2>
+        <h2 className="mb-4 font-semibold text-gray-900">Subscription & charity</h2>
 
-        <div className="grid gap-4 text-sm sm:grid-cols-3">
-          <div>
-            <p className="text-gray-500">Plan</p>
+        <div className="grid gap-5 sm:grid-cols-3">
+          <Field label="Plan">
             <p className="font-semibold capitalize text-gray-900">
-              {user.subscriptionPlan}
+              {profileData.subscriptionPlan}
             </p>
-          </div>
+          </Field>
 
-          <div>
-            <p className="text-gray-500">Plan ends on</p>
+          <Field label="Plan ends on">
             <p className="font-semibold text-gray-900">
-              {user.subscriptionEnd ? formatDate(user.subscriptionEnd) : "-"}
+              {profileData.subscriptionEnd ? formatDate(profileData.subscriptionEnd) : "-"}
               {isExpired && (
-                <span className="ml-2 text-xs font-medium text-red-600">
-                  Expired
-                </span>
+                <span className="ml-2 text-xs font-medium text-red-600">Expired</span>
               )}
             </p>
-          </div>
+          </Field>
 
-          <div>
-            <p className="text-gray-500">Supporting</p>
+          <Field label="Supporting">
             <p className="font-semibold text-gray-900">
-              {charityNames[user.charity] || user.charity}
+              {charityNames[profileData.charity] || profileData.charity}
             </p>
-          </div>
+          </Field>
         </div>
       </div>
     </div>
   );
 };
 
-export default Profile;
+export default MyProfile;
