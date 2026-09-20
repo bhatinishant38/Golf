@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { Eye, EyeOff, Leaf } from "lucide-react";
 import axios from "axios";
-import { AppContext } from "../context/AppContext";
+import { AppContext } from "../../context/AppContext";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
@@ -121,7 +121,6 @@ export default function Register() {
   };
 
   return (
-    
     <section className="bg-green-50/60 py-10 sm:py-16">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="overflow-hidden rounded-3xl border border-green-100 bg-white/60 shadow-sm">

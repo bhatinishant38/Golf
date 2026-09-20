@@ -1,20 +1,23 @@
-import React from "react";
+import { useContext } from "react";
 import { Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
-import Register from "./pages/Register";
-import Pricing from "./pages/Pricing";
-import Login from "./pages/Login";
-import { ToastContainer, toast } from "react-toastify";
-import Userhome from "./pages/UserHome";
-import Dashboard from "./pages/Dashboard";
-import Draws from "./pages/Draws";
-import Scroes from "./pages/Scroes";
-import Charity from "./pages/Charity";
-import Winnings from "./pages/Winnings";
-import Profile from "./pages/Profile";
-import Setting from "./pages/Setting";
+import LandingPage from "./pages/ForPublic/LandingPage";
+import Register from "./pages/ForPublic/Register";
+import Pricing from "./pages/ForUser/Pricing";
+import Login from "./pages/ForPublic/Login";
+import { ToastContainer } from "react-toastify";
+import Userhome from "./pages/ForUser/UserHome";
+import Dashboard from "./pages/ForUser/Dashboard";
+import Draws from "./pages/ForUser/Draws";
+
+import Charity from "./pages/ForUser/Charity";
+import Winnings from "./pages/ForUser/Winnings";
+import Profile from "./pages/ForUser/Profile";
+import Setting from "./pages/ForUser/Setting";
+import { AppContext } from "./context/AppContext";
+import Scores from "./pages/ForUser/Scores";
 
 const App = () => {
+  const { token, backendUrl } = useContext(AppContext);
   return (
     <>
       <ToastContainer />
@@ -25,7 +28,10 @@ const App = () => {
         <Route path="/pricing" element={<Pricing />}></Route>
         <Route path="/userhome" element={<Userhome />}>
           <Route index element={<Dashboard />} />
-          <Route path="scores" element={<Scroes />} />
+          <Route
+            path="scores"
+            element={<Scores token={token} backendUrl={backendUrl} />}
+          />
           <Route path="draws" element={<Draws />} />
           <Route path="charity" element={<Charity />} />
           <Route path="winnings" element={<Winnings />} />
