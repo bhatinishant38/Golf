@@ -108,7 +108,7 @@ export default function Register() {
       if (data.success) {
         localStorage.setItem("token", data.token);
         setToken(data.token);
-        navigate("/dashboard");
+        navigate("/userhome");
 
         toast.success("Registered Successfully");
       } else {
@@ -121,6 +121,7 @@ export default function Register() {
   };
 
   return (
+    
     <section className="bg-green-50/60 py-10 sm:py-16">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="overflow-hidden rounded-3xl border border-green-100 bg-white/60 shadow-sm">

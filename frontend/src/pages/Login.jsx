@@ -4,6 +4,7 @@ import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 function Logo() {
   return (
@@ -84,7 +85,7 @@ export default function Login() {
         localStorage.setItem("token", data.token);
         setToken(data.token);
         console.log(data);
-        navigate("/dashboard");
+        navigate("/userhome");
 
         toast.success("Login Successfully");
       } else {
@@ -97,7 +98,10 @@ export default function Login() {
   };
 
   return (
+    <>
+    
     <section className="bg-green-50/60 py-10 sm:py-16">
+     
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="overflow-hidden rounded-3xl border border-green-100 shadow-sm">
           <div className="grid lg:grid-cols-2">
@@ -211,5 +215,7 @@ export default function Login() {
         </div>
       </div>
     </section>
+
+    </>
   );
 }

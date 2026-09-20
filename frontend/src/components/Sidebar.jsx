@@ -1,25 +1,32 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Target, Gift, Heart,
-  Trophy, User, Settings, LogOut,
+  LayoutDashboard,
+  Target,
+  Gift,
+  Heart,
+  Trophy,
+  User,
+  Settings,
+  LogOut,
 } from "lucide-react";
 
 const mainLinks = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/scores", label: "My Scores", icon: Target },
-  { to: "/draws", label: "Draws & Rewards", icon: Gift },
-  { to: "/charity", label: "Charity", icon: Heart },
+  { to: "/userhome", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/userhome/scores", label: "My Scores", icon: Target },
+  { to: "/userhome/draws", label: "Draws & Rewards", icon: Gift },
+  { to: "/userhome/charity", label: "Charity", icon: Heart },
 ];
 
 const accountLinks = [
-  { to: "/winnings", label: "Winnings", icon: Trophy },
-  { to: "/profile", label: "Profile", icon: User },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/userhome/winnings", label: "Winnings", icon: Trophy },
+  { to: "/userhome/profile", label: "Profile", icon: User },
+  { to: "/userhome/settings", label: "Settings", icon: Settings },
 ];
 
-const NavItem = ({ to, label, icon: Icon }) => (
+const NavItem = ({ to, label, icon: Icon, end }) => (
   <NavLink
     to={to}
+    end={end}
     className={({ isActive }) =>
       `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
         isActive
@@ -44,14 +51,20 @@ const Sidebar = ({ setToken }) => {
 
   return (
     <aside className="flex w-60 shrink-0 flex-col bg-[#0B5D3B] px-4 py-6 text-white">
-      <div className="mb-8 px-2 text-lg font-bold tracking-tight">Digital Heroes</div>
+      <div className="mb-8 px-2 text-lg font-bold tracking-tight">
+        Digital Heroes
+      </div>
 
       <nav className="flex flex-col gap-1">
-        {mainLinks.map((l) => <NavItem key={l.to} {...l} />)}
+        {mainLinks.map((l) => (
+          <NavItem key={l.to} {...l} />
+        ))}
       </nav>
 
       <nav className="mt-6 flex flex-col gap-1 border-t border-white/10 pt-6">
-        {accountLinks.map((l) => <NavItem key={l.to} {...l} />)}
+        {accountLinks.map((l) => (
+          <NavItem key={l.to} {...l} />
+        ))}
       </nav>
 
       <button

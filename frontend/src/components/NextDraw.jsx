@@ -17,7 +17,7 @@ const NextDraw = ({ date, prize }) => (
     <p className="mt-2 text-3xl font-bold text-gray-900">{prize}</p>
 
     <Link
-      to="/draws"
+      to="/userhome/draws"
       className="mt-auto rounded-lg bg-[#0B5D3B] py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#094d31]"
     >
       View Rewards

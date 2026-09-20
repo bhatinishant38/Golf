@@ -4,7 +4,10 @@ const LatestScores = ({ scores }) => (
   <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
     <div className="mb-4 flex items-center justify-between">
       <h2 className="font-semibold text-gray-900">Latest Scores</h2>
-      <Link to="/scores" className="text-sm font-medium text-[#0B5D3B] hover:underline">
+      <Link
+        to="/userhome/scores"
+        className="text-sm font-medium text-[#0B5D3B] hover:underline"
+      >
         View All
       </Link>
     </div>

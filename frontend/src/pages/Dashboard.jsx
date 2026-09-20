@@ -1,9 +1,9 @@
-import { useContext } from "react";
+import React, { useContext } from 'react'
 import { Target, Ticket, Heart } from "lucide-react";
-import { AppContext } from "../context/AppContext";
+
 
 import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
+
 import StatCard from "../components/StatCard";
 import LatestScores from "../components/LatestScores";
 import NextDraw from "../components/NextDraw";
@@ -25,16 +25,14 @@ const mockData = {
 };
 
 const Dashboard = () => {
-  const { setToken } = useContext(AppContext);
-  const data = mockData;
 
-  const { user, stats, scores, nextDraw, charity } = data;
+   
+    const data = mockData;
+  
+    const { user, stats, scores, nextDraw, charity } = data;
 
   return (
-    <div className="flex min-h-screen bg-[#F4F7F5]">
-      <Sidebar setToken={setToken} />
-
-      <main className="flex-1 space-y-6 p-8">
+          <main className="flex-1 space-y-6 p-8">
         <Header user={user} />
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -71,8 +69,7 @@ const Dashboard = () => {
           image={charity.image}
         />
       </main>
-    </div>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard

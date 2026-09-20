@@ -15,7 +15,7 @@ const CharityBanner = ({ name, percent, image }) => (
     </div>
 
     <Link
-      to="/charity"
+      to="/userhome/charity"
       className="mr-5 rounded-lg border border-[#0B5D3B] bg-white px-4 py-2 text-sm font-semibold text-[#0B5D3B] transition-colors hover:bg-emerald-50"
     >
       Change Charity
