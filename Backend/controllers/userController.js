@@ -8,12 +8,16 @@ export const registerUser = async (req, res) => {
     const { name, email, password, subscriptionPlan, charity } = req.body;
     if (!email || !name || !password || !subscriptionPlan || !charity) {
       return res.json({ success: false, message: "Enter your details" });
-     
     }
-     const normalizedEmail = email.toLowerCase().trim();
-     const exists = await userModel.findOne({ email: normalizedEmail }).select('password')
+    const normalizedEmail = email.toLowerCase().trim();
+    const exists = await userModel
+      .findOne({ email: normalizedEmail })
+      .select("password");
+    if (exists) {
+      return res.json({ success: false, message: "Email already registered" });
+    }
 
-    if (!validator.isEmail(email)) {
+    if (!validator.isEmail(normalizedEmail)) {
       return res.json({ success: false, message: "Enter correct email" });
     }
 
@@ -26,7 +30,7 @@ export const registerUser = async (req, res) => {
 
     const userData = {
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       subscriptionPlan,
       charity,
@@ -43,32 +47,42 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
-
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Enter your details" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Enter your details" });
     }
     if (!validator.isEmail(email)) {
-      return res.status(400).json({ success: false, message: "Enter correct email" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Enter correct email" });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const user = await userModel.findOne({ email: normalizedEmail }).select("password");
+    const user = await userModel
+      .findOne({ email: normalizedEmail })
+      .select("password");
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: "7d" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: "7d",
+    });
     return res.status(200).json({ success: true, token });
   } catch (error) {
     console.log(error);

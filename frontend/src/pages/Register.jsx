@@ -1,17 +1,40 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Eye, EyeOff, Leaf } from "lucide-react";
+import axios from "axios";
+import { AppContext } from "../context/AppContext";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function GolferIllustration() {
   return (
-    <svg viewBox="0 0 240 260" aria-hidden="true" className="mx-auto h-56 w-56 lg:h-64 lg:w-64">
+    <svg
+      viewBox="0 0 240 260"
+      aria-hidden="true"
+      className="mx-auto h-56 w-56 lg:h-64 lg:w-64"
+    >
       <ellipse cx="120" cy="240" rx="80" ry="14" fill="#bfe3c8" opacity="0.6" />
-      <circle cx="150" cy="90" r="58" fill="none" stroke="#7fc794" strokeWidth="6" />
+      <circle
+        cx="150"
+        cy="90"
+        r="58"
+        fill="none"
+        stroke="#7fc794"
+        strokeWidth="6"
+      />
       <g fill="#2f7a49">
         <circle cx="150" cy="55" r="14" />
         <path d="M150 68 C130 80 128 110 132 140 L124 210 L138 210 L148 150 L158 210 L172 210 L168 138 C176 108 172 80 150 68Z" />
         <path d="M132 90 C110 100 96 118 90 138 L100 144 C108 126 118 112 134 104Z" />
       </g>
-      <rect x="88" y="132" width="6" height="60" rx="3" fill="#1f5c37" transform="rotate(20 91 132)" />
+      <rect
+        x="88"
+        y="132"
+        width="6"
+        height="60"
+        rx="3"
+        fill="#1f5c37"
+        transform="rotate(20 91 132)"
+      />
     </svg>
   );
 }
@@ -25,8 +48,14 @@ function Logo() {
           <stop offset="100%" stopColor="#14532d" />
         </linearGradient>
       </defs>
-      <path fill="url(#dh-logo-2)" d="M16 2.5 28 6.4v9.2c0 6.6-4.6 12.3-12 14.4C8.6 27.9 4 22.2 4 15.6V6.4L16 2.5Z" />
-      <path fill="#fff" d="M11 11h4.5v3.2H11V11Zm5.6 0H21v3.2h-4.4V11Zm-5.6 4.4h4.5v3.2H11v-3.2Zm5.6 0H21v7.2h-4.4v-7.2Z" />
+      <path
+        fill="url(#dh-logo-2)"
+        d="M16 2.5 28 6.4v9.2c0 6.6-4.6 12.3-12 14.4C8.6 27.9 4 22.2 4 15.6V6.4L16 2.5Z"
+      />
+      <path
+        fill="#fff"
+        d="M11 11h4.5v3.2H11V11Zm5.6 0H21v3.2h-4.4V11Zm-5.6 4.4h4.5v3.2H11v-3.2Zm5.6 0H21v7.2h-4.4v-7.2Z"
+      />
     </svg>
   );
 }
@@ -54,10 +83,42 @@ function getCharityFromUrl() {
 }
 
 export default function Register() {
+  const { backendUrl, setToken } = useContext(AppContext);
   const [showPassword, setShowPassword] = useState(false);
-  const [plan, setPlan] = useState("yearly");
   const [agreed, setAgreed] = useState(false);
+
   const [charity, setCharity] = useState(getCharityFromUrl);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [subscriptionPlan, setSubscriptionPlan] = useState("basic");
+  const navigate = useNavigate();
+
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+
+    try {
+      const { data } = await axios.post(backendUrl + "/api/user/register", {
+        name,
+        email,
+        password,
+        subscriptionPlan,
+        charity,
+      });
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        setToken(data.token);
+        navigate("/dashboard");
+
+        toast.success("Registered Successfully");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
 
   return (
     <section className="bg-green-50/60 py-10 sm:py-16">
@@ -80,14 +141,19 @@ export default function Register() {
                 Join a community that plays for a purpose.
               </p>
 
-              <form className="mt-7 space-y-5" onSubmit={(e) => e.preventDefault()}>
+              <form onSubmit={onSubmitHandler} className="mt-7 space-y-5">
                 <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-slate-700">
+                  <label
+                    htmlFor="fullName"
+                    className="block text-sm font-medium text-slate-700"
+                  >
                     Full name
                   </label>
                   <input
                     id="fullName"
                     type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="John Doe"
                     autoComplete="name"
                     className="mt-1.5 w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600/20"
@@ -95,12 +161,18 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-slate-700"
+                  >
                     Email address
                   </label>
                   <input
                     id="email"
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                     placeholder="you@example.com"
                     autoComplete="email"
                     className="mt-1.5 w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600/20"
@@ -108,13 +180,18 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-slate-700"
+                  >
                     Password
                   </label>
                   <div className="relative mt-1.5">
                     <input
                       id="password"
                       type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter a password"
                       autoComplete="new-password"
                       className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600/20"
@@ -122,24 +199,32 @@ export default function Register() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((show) => !show)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                       aria-pressed={showPassword}
                       className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-400 hover:text-slate-600"
                     >
-                      {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-4.5 w-4.5" />
+                      ) : (
+                        <Eye className="h-4.5 w-4.5" />
+                      )}
                     </button>
                   </div>
                 </div>
 
                 <fieldset>
-                  <legend className="text-sm font-medium text-slate-700">Subscription plan</legend>
+                  <legend className="text-sm font-medium text-slate-700">
+                    Subscription plan
+                  </legend>
                   <div className="mt-1.5 grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setPlan("monthly")}
-                      aria-pressed={plan === "monthly"}
+                      onClick={() => setSubscriptionPlan("basic")}
+                      aria-pressed={subscriptionPlan === "basic"}
                       className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-                        plan === "monthly"
+                        subscriptionPlan === "basic"
                           ? "border-green-700 bg-green-50 text-green-800"
                           : "border-slate-200 text-slate-500 hover:border-slate-300"
                       }`}
@@ -148,10 +233,10 @@ export default function Register() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPlan("yearly")}
-                      aria-pressed={plan === "yearly"}
+                      onClick={() => setSubscriptionPlan("pro")}
+                      aria-pressed={subscriptionPlan === "pro"}
                       className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-                        plan === "yearly"
+                        subscriptionPlan === "pro"
                           ? "border-green-700 bg-green-50 text-green-800"
                           : "border-slate-200 text-slate-500 hover:border-slate-300"
                       }`}
@@ -162,7 +247,10 @@ export default function Register() {
                 </fieldset>
 
                 <div>
-                  <label htmlFor="charity" className="block text-sm font-medium text-slate-700">
+                  <label
+                    htmlFor="charity"
+                    className="block text-sm font-medium text-slate-700"
+                  >
                     Choose charity
                   </label>
                   <select
@@ -208,7 +296,10 @@ export default function Register() {
 
                 <p className="text-center text-sm text-slate-500">
                   Already have an account?{" "}
-                  <a href="/login" className="font-medium text-green-700 hover:text-green-800">
+                  <a
+                    href="/login"
+                    className="font-medium text-green-700 hover:text-green-800"
+                  >
                     Log in
                   </a>
                 </p>
