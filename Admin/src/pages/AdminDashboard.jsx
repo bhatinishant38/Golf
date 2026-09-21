@@ -142,7 +142,7 @@ const AdminDashboard = () => {
         <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold text-gray-900">Recent Users</h2>
-            <Link to="/admin/users" className="text-sm font-medium text-[#0B5D3B] hover:underline">
+            <Link to="/users" className="text-sm font-medium text-[#0B5D3B] hover:underline">
               View All
             </Link>
           </div>

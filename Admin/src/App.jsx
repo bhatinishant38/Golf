@@ -26,7 +26,7 @@ const App = () => {
       <>
         <ToastContainer />
         <Routes>
-          <Route path="/" element={<AdminLogin/>}></Route>
+          <Route path="/login" element={<AdminLogin/>}></Route>
         </Routes>
       </>
     );
@@ -40,7 +40,7 @@ const App = () => {
 
       <main className="min-w-0 flex-1 p-4 md:p-8">
         <Routes>
-          <Route path="/dashboard" element={<AdminDashboard />} />
+          <Route path="/" element={<AdminDashboard />} />
           <Route path="/users" element={<Users />} />
           <Route path="/subscriptions" element={<ComingSoon title="Subscriptions" />} />
           <Route path="/draws" element={<ComingSoon title="Draws" />} />

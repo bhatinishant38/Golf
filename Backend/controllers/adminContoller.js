@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { userModel } from "../models/userModel.js";
 
 export const adminLogin = (req, res) => {
   try {
@@ -18,5 +19,17 @@ export const adminLogin = (req, res) => {
   } catch (error) {
     // console.log(error)
     res.json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/admin/users   (all users, newest first, without passwords)
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await userModel.find().select("-password").sort({ createdAt: -1 });
+ 
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };

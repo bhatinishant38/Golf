@@ -10,9 +10,11 @@ import {
   ShieldCheck,
   LogOut,
 } from "lucide-react";
+import { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
 const links = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/users", label: "Users", icon: Users },
   { to: "/subscriptions", label: "Subscriptions", icon: CreditCard },
   { to: "/draws", label: "Draws", icon: Ticket },
@@ -47,6 +49,7 @@ const Sidebar = () => {
     const handleLogout = () => {
     localStorage.removeItem("atoken");
     setAToken("");
+    navigate('/')
     };
 
   return (

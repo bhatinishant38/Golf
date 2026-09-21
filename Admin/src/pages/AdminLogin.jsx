@@ -3,13 +3,14 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { AppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
 
 const inputClass =
   "w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0B5D3B] focus:ring-2 focus:ring-emerald-100";
 
 const AdminLogin = () => {
   const { backendUrl, setAToken } = useContext(AppContext);
-
+  const navigate = useNavigate()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,7 @@ const AdminLogin = () => {
       if (data.success) {
         localStorage.setItem("atoken", data.atoken);
         setAToken(data.atoken); // App.jsx sees the token and shows the admin pages
+        navigate('/')
         toast.success("Welcome back!");
       } else {
         toast.error(data.message);
