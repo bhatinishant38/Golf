@@ -1,39 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import { useContext, useState } from "react";
 import { toast } from "react-toastify";
 import { Plus } from "lucide-react";
 
 import ScoreTable from "../../components/ForUser/ScoreTable";
 import { formatDate } from "../../components/ForUser/formatDate";
 import ScoreModal from "../../components/ForUser/ScoreModal";
+import { AppContext } from "../../context/AppContext";
 
-const Scores = ({ token, backendUrl }) => {
-  const [scores, setScores] = useState([]);
-  const [loading, setLoading] = useState(true);
+const Scores = () => {
+  // The scores and every score action come from the context
+  const { scores, scoresLoading, addScore, updateScore, deleteScore } =
+    useContext(AppContext);
+
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null); // the score being edited, or null when adding
-
-  const api = `${backendUrl}/api/user/scores`;
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const loadScores = useCallback(async () => {
-    try {
-      const { data } = await axios.get(api, { headers });
-      if (data.success) setScores(data.scores);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Could not load scores");
-    } finally {
-      setLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api, token]);
-
-  useEffect(() => {
-    // The request updates component state when it completes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadScores();
-  }, [loadScores]);
 
   const openAdd = () => {
     setEditing(null);
@@ -46,56 +27,31 @@ const Scores = ({ token, backendUrl }) => {
   };
 
   const handleSave = async ({ date, score }) => {
-    // One entry per date: check here for instant feedback (backend must check too)
+    // One entry per date: check here for instant feedback (the backend checks too)
     const duplicate = scores.some(
       (s) => s.date.slice(0, 10) === date && s._id !== editing?._id,
     );
     if (duplicate) {
-      toast.error(
-        "You already have a score for this date. Edit that entry instead.",
-      );
+      toast.error("You already have a score for this date. Edit that entry instead.");
       return;
     }
 
     setSaving(true);
-    try {
-      const { data } = editing
-        ? await axios.put(`${api}/${editing._id}`, { date, score }, { headers })
-        : await axios.post(api, { date, score }, { headers });
+    const success = editing
+      ? await updateScore(editing._id, { date, score })
+      : await addScore({ date, score });
+    setSaving(false);
 
-      if (data.success) {
-        toast.success(editing ? "Score updated" : "Score added");
-        setModalOpen(false);
-        loadScores();
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
-    } finally {
-      setSaving(false);
-    }
+    if (success) setModalOpen(false);
   };
 
   const handleDelete = async (score) => {
-    if (
-      !window.confirm(
-        `Delete your score of ${score.score} from ${formatDate(score.date)}?`,
-      )
-    )
-      return;
+    const sure = window.confirm(
+      `Delete your score of ${score.score} from ${formatDate(score.date)}?`,
+    );
+    if (!sure) return;
 
-    try {
-      const { data } = await axios.delete(`${api}/${score._id}`, { headers });
-      if (data.success) {
-        toast.success("Score deleted");
-        loadScores();
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
-    }
+    await deleteScore(score._id);
   };
 
   return (
@@ -103,9 +59,7 @@ const Scores = ({ token, backendUrl }) => {
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#0B5D3B]">
-              My Golf Scores
-            </h1>
+            <h1 className="text-2xl font-bold text-[#0B5D3B]">My Golf Scores</h1>
             <p className="mt-1 text-sm text-gray-500">
               Your last 5 Stableford scores (newest first).
             </p>
@@ -119,16 +73,10 @@ const Scores = ({ token, backendUrl }) => {
           </button>
         </div>
 
-        {loading ? (
-          <p className="py-10 text-center text-sm text-gray-400">
-            Loading scores...
-          </p>
+        {scoresLoading ? (
+          <p className="py-10 text-center text-sm text-gray-400">Loading scores...</p>
         ) : (
-          <ScoreTable
-            scores={scores}
-            onEdit={openEdit}
-            onDelete={handleDelete}
-          />
+          <ScoreTable scores={scores} onEdit={openEdit} onDelete={handleDelete} />
         )}
 
         <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-sm text-gray-600">

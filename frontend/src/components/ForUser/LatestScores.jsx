@@ -1,7 +1,14 @@
 import { Link } from "react-router-dom";
+import React, { useContext } from 'react'
+import { AppContext } from "../../context/AppContext";
+import { formatDate } from "./formatDate";
 
-const LatestScores = ({ scores }) => (
-  <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+const LatestScores = () => {
+
+  const {scores} = useContext(AppContext)
+
+  return (
+    <section className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
     <div className="mb-4 flex items-center justify-between">
       <h2 className="font-semibold text-gray-900">Latest Scores</h2>
       <Link
@@ -28,9 +35,9 @@ const LatestScores = ({ scores }) => (
             </td>
           </tr>
         ) : (
-          scores.map((s, i) => (
+          scores.slice(0,5).map((s, i) => (
             <tr key={i} className="border-b border-gray-50 last:border-0">
-              <td className="py-2.5 text-gray-700">{s.date}</td>
+              <td className="py-2.5 text-gray-700">{formatDate(s.date)}</td>
               <td className="py-2.5 font-medium text-gray-900">{s.score}</td>
               <td className="py-2.5 text-gray-400">{s.position || "-"}</td>
             </tr>
@@ -39,6 +46,7 @@ const LatestScores = ({ scores }) => (
       </tbody>
     </table>
   </section>
-);
+  )
+}
 
-export default LatestScores;
+export default LatestScores

@@ -3,6 +3,7 @@ import cors from 'cors'
 import "dotenv/config";
 import { connectDatabase } from './Config/db.js';
 import { userRouter } from './Routes/userRoutes.js';
+import { connectCloudinary } from './Config/cloudinary.js';
 
 //app config
 const app = express()
@@ -13,6 +14,7 @@ const PORT = process.env.PORT
 app.use(express.json())
 app.use(cors())
 
+//db connection
 connectDatabase()
 
 // api endpoints

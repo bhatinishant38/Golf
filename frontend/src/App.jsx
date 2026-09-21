@@ -28,10 +28,7 @@ const App = () => {
         <Route path="/pricing" element={<Pricing />}></Route>
         <Route path="/userhome" element={<Userhome />}>
           <Route index element={<Dashboard />} />
-          <Route
-            path="scores"
-            element={<Scores token={token} backendUrl={backendUrl} />}
-          />
+          <Route path="scores" element={<Scores  />}      />
           <Route path="draws" element={<Draws />} />
           <Route path="charity" element={<Charity />} />
           <Route path="winnings" element={<Winnings />} />
