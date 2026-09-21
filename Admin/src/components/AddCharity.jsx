@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { categories } from "../Data/demo";
+import { AppContext } from "../context/AppContext";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 
 // Component 1: Add / Edit Charity - Modal form matching your mongoose model
@@ -15,7 +18,8 @@ const AddCharity = ({ isOpen, onClose, onSubmit, editingCharity, saving }) => {
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef(null);
-
+  const {backendUrl,atoken}  = useContext(AppContext)
+  
   useEffect(() => {
     if (editingCharity) {
       setForm({
@@ -62,27 +66,66 @@ const AddCharity = ({ isOpen, onClose, onSubmit, editingCharity, saving }) => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Validation: require image file for new, or existing image for edit
-    if (!imageFile && !previewUrl) {
-      alert("Please select an image file");
-      return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Image is required when adding a new charity
+  if (!imageFile) {
+    alert("Please select an image file");
+    return;
+  }
+
+  try {
+    const formdata = new FormData();
+
+    formdata.append("name", form.name);
+    formdata.append("category", form.category);
+    formdata.append("description", form.description);
+    formdata.append("raised", String(form.raised || 0));
+    formdata.append("members", String(form.members || 0));
+
+    // IMPORTANT: field name must be exactly "image"
+    formdata.append("image", imageFile);
+    console.log(formdata)
+
+    const { data } = await axios.post(
+      backendUrl + "/api/admin/add-charity",
+      formdata,
+      {
+        headers: {
+          atoken,
+        },
+      }
+    );
+
+    if (data.success) {
+      toast.success(data.message);
+
+      // Reset form
+      setForm({
+        name: "",
+        category: "",
+        description: "",
+        raised: 0,
+        members: 0,
+      });
+
+      setImageFile(null);
+      setPreviewUrl("");
+
+      // Refresh charity list
+      fetchCharities();
+    } else {
+      toast.error(data.message);
     }
-    const fd = new FormData();
-    fd.append("name", form.name);
-    fd.append("category", form.category);
-    fd.append("description", form.description);
-    fd.append("raised", String(form.raised));
-    fd.append("members", String(form.members));
-    if (imageFile) {
-      fd.append("image", imageFile);
-    } else if (editingCharity && previewUrl) {
-      // Keep existing image URL if no new file selected
-      fd.append("image", previewUrl);
-    }
-    onSubmit(fd);
-  };
+  } catch (error) {
+    console.log("error",error);
+
+    toast.error(
+      error.response?.data?.message || "Something went wrong"
+    );
+  }
+};
 
   const clearImage = () => {
     setImageFile(null);

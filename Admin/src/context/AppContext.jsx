@@ -9,6 +9,7 @@ export const AppContextProvider = ({ children }) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [charities ,setCharities] = useState([])
 
   const [atoken, setAToken] = useState(
     () => localStorage.getItem("atoken") || "",
@@ -38,6 +39,25 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
+const fetchCharities = async () => {
+  try {
+    const { data } = await axios.get(
+      backendUrl + "/api/admin/get-charities",
+      {
+        headers: { atoken },
+      }
+    );
+    if (data.success) {
+      setCharities(data.charities);
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+
   const value = {
     backendUrl,
     setAToken,
@@ -47,6 +67,9 @@ export const AppContextProvider = ({ children }) => {
     loadusers,
     users,
     setUsers,
+    fetchCharities,
+    charities ,
+    setCharities
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

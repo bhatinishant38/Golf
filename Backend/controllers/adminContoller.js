@@ -89,18 +89,20 @@ export const addCharity = async (req, res) => {
   }
 };
 
-export const getAllCharity =async(req,res)=>{
+export const getAllCharity = async (req, res) => {
   try {
-    const charities = await charityModel.find()
-    res.status(200).json({ success: true, charities });
-    
+    const charities = await charityModel.find().sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      charities,
+    });
   } catch (error) {
-        console.log(error);
+    console.log(error);
 
     return res.status(500).json({
       success: false,
       message: "Could not get charities",
     });
-    
   }
-}
+};
