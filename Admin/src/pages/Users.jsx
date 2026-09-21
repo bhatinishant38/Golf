@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
+
 import { Search, Users as UsersIcon, CheckCircle, Clock } from "lucide-react";
 import { AppContext } from "../context/AppContext";
 import { formatDate } from "../context/formatDate";
@@ -8,8 +7,6 @@ import { formatDate } from "../context/formatDate";
 const USERS_PER_PAGE = 10;
 
 // ---- Helpers ----
-
-
 
 const isExpired = (user) =>
   user.subscriptionEnd && new Date(user.subscriptionEnd) < new Date();
@@ -33,40 +30,24 @@ const SummaryCard = ({ icon: Icon, label, value }) => (
 // ---- Page ----
 
 const Users = () => {
-  const { backendUrl, atoken, setAToken, charityNames = {} } = useContext(AppContext);
+  const {
+    atoken,
+    users,
+    loading,
+    loadusers,
+    charityNames = {},
+  } = useContext(AppContext);
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [page, setPage] = useState(1);
 
   // Load all users once when the page opens
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const { data } = await axios.get(backendUrl + "/api/admin/users", {
-          headers: { atoken },
-        });
-        if (data.success) {
-          setUsers(data.users);
-        } else {
-          toast.error(data.message);
-        }
-      } catch (error) {
-        if (error.response?.status === 401) {
-          // Token missing or expired: send the admin back to the login page
-          localStorage.removeItem("atoken");
-          setAToken("");
-        } else {
-          toast.error(error.response?.data?.message || "Could not load users");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadUsers();
-  }, [backendUrl, atoken, setAToken]);
+    if (atoken) {
+      loadusers();
+    }
+  }, [atoken, loadusers]);
 
   // Numbers for the top cards
   const totalUsers = users.length;
@@ -77,34 +58,55 @@ const Users = () => {
   const filteredUsers = users.filter((user) => {
     const text = search.toLowerCase().trim();
     const matchesSearch =
-      user.name.toLowerCase().includes(text) || user.email.toLowerCase().includes(text);
-    const matchesPlan = planFilter === "all" || user.subscriptionPlan === planFilter;
+      user.name.toLowerCase().includes(text) ||
+      user.email.toLowerCase().includes(text);
+    const matchesPlan =
+      planFilter === "all" || user.subscriptionPlan === planFilter;
     return matchesSearch && matchesPlan;
   });
 
   // Show only one page at a time
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredUsers.length / USERS_PER_PAGE),
+  );
   const startIndex = (page - 1) * USERS_PER_PAGE;
-  const pageUsers = filteredUsers.slice(startIndex, startIndex + USERS_PER_PAGE);
+  const pageUsers = filteredUsers.slice(
+    startIndex,
+    startIndex + USERS_PER_PAGE,
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <p className="mt-1 text-sm text-gray-500">Everyone who has registered on the platform.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Everyone who has registered on the platform.
+        </p>
       </div>
 
       {/* Totals */}
       <div className="grid gap-4 sm:grid-cols-3">
         <SummaryCard icon={UsersIcon} label="Total Users" value={totalUsers} />
-        <SummaryCard icon={CheckCircle} label="Active Subscriptions" value={activeCount} />
-        <SummaryCard icon={Clock} label="Expired Subscriptions" value={expiredCount} />
+        <SummaryCard
+          icon={CheckCircle}
+          label="Active Subscriptions"
+          value={activeCount}
+        />
+        <SummaryCard
+          icon={Clock}
+          label="Expired Subscriptions"
+          value={expiredCount}
+        />
       </div>
 
       {/* Search and filter */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="search"
             value={search}
@@ -134,7 +136,7 @@ const Users = () => {
       {/* Users table */}
       <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-180 text-left text-sm">
             <thead className="bg-emerald-50/60 text-gray-600">
               <tr>
                 <th className="px-5 py-3 font-medium">User</th>
@@ -148,13 +150,19 @@ const Users = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-gray-400">
+                  <td
+                    colSpan={6}
+                    className="px-5 py-10 text-center text-gray-400"
+                  >
                     Loading users...
                   </td>
                 </tr>
               ) : pageUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-gray-400">
+                  <td
+                    colSpan={6}
+                    className="px-5 py-10 text-center text-gray-400"
+                  >
                     No users found.
                   </td>
                 </tr>
@@ -164,20 +172,28 @@ const Users = () => {
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         {user.image ? (
-                          <img src={user.image} alt={user.name} className="h-9 w-9 rounded-full object-cover" />
+                          <img
+                            src={user.image}
+                            alt={user.name}
+                            className="h-9 w-9 rounded-full object-cover"
+                          />
                         ) : (
                           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0B5D3B] text-sm font-semibold text-white">
                             {user.name[0].toUpperCase()}
                           </div>
                         )}
                         <div>
-                          <p className="font-medium text-gray-900">{user.name}</p>
+                          <p className="font-medium text-gray-900">
+                            {user.name}
+                          </p>
                           <p className="text-xs text-gray-500">{user.email}</p>
                         </div>
                       </div>
                     </td>
 
-                    <td className="px-5 py-3.5 text-gray-600">{user.phone || "-"}</td>
+                    <td className="px-5 py-3.5 text-gray-600">
+                      {user.phone || "-"}
+                    </td>
 
                     <td className="px-5 py-3.5">
                       <span
@@ -192,9 +208,13 @@ const Users = () => {
                     </td>
 
                     <td className="px-5 py-3.5 text-gray-600">
-                      {user.subscriptionEnd ? formatDate(user.subscriptionEnd) : "-"}
+                      {user.subscriptionEnd
+                        ? formatDate(user.subscriptionEnd)
+                        : "-"}
                       {isExpired(user) && (
-                        <span className="ml-2 text-xs font-medium text-red-600">Expired</span>
+                        <span className="ml-2 text-xs font-medium text-red-600">
+                          Expired
+                        </span>
                       )}
                     </td>
 
@@ -202,7 +222,9 @@ const Users = () => {
                       {charityNames[user.charity] || user.charity}
                     </td>
 
-                    <td className="px-5 py-3.5 text-gray-600">{formatDate(user.createdAt)}</td>
+                    <td className="px-5 py-3.5 text-gray-600">
+                      {formatDate(user.createdAt)}
+                    </td>
                   </tr>
                 ))
               )}
@@ -214,7 +236,8 @@ const Users = () => {
         {!loading && filteredUsers.length > 0 && (
           <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3 text-sm text-gray-500">
             <p>
-              Showing {startIndex + 1} to {Math.min(startIndex + USERS_PER_PAGE, filteredUsers.length)} of{" "}
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + USERS_PER_PAGE, filteredUsers.length)} of{" "}
               {filteredUsers.length}
             </p>
             <div className="flex items-center gap-2">

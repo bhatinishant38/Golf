@@ -1,31 +1,20 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import { Users, CreditCard, Ticket, Trophy, Wallet, Heart } from "lucide-react";
+import { AppContext } from "../context/AppContext";
+import { formatDate } from "../context/formatDate";
 
 // ---- Data ----
-// This is sample data so you can see the page right away.
-// To load real numbers, see the comment inside the component.
+// Draws, winners, and charity totals still don't have a backend endpoint,
+// so those stay mocked until you add one (see note near the bottom).
 
 const mockData = {
-  stats: {
-    totalUsers: 1248,
-    newUsersThisMonth: 32,
-    activeSubscriptions: 1043,
-    totalDraws: 9,
-    totalWinners: 27,
-    pendingVerifications: 4,
-    prizePaid: 452000,
-    charityRaised: 385600,
-  },
-  plans: { basic: 712, pro: 331 },
+  totalDraws: 9,
+  totalWinners: 27,
+  pendingVerifications: 4,
+  prizePaid: 452000,
+  charityRaised: 385600,
   nextDraw: { date: "01 Oct 2026", prizePool: 125000 },
-  recentUsers: [
-    { id: 1, name: "Aarav Mehta", plan: "pro", joined: "2026-09-20" },
-    { id: 2, name: "Priya Nair", plan: "basic", joined: "2026-09-19" },
-    { id: 3, name: "Rahul Verma", plan: "basic", joined: "2026-09-18" },
-    { id: 4, name: "Sneha Iyer", plan: "pro", joined: "2026-09-17" },
-    { id: 5, name: "Karan Singh", plan: "basic", joined: "2026-09-16" },
-  ],
   pendingWinners: [
     { id: 1, name: "Rohit Sharma", prize: 25000, draw: "Sep 2026" },
     { id: 2, name: "Neha Singh", prize: 12000, draw: "Sep 2026" },
@@ -37,12 +26,8 @@ const mockData = {
 
 const money = (amount) => "₹" + amount.toLocaleString("en-IN");
 
-const formatDate = (date) =>
-  new Date(date).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+const isExpired = (user) =>
+  user.subscriptionEnd && new Date(user.subscriptionEnd) < new Date();
 
 // One number card at the top of the page
 const StatCard = ({ icon: Icon, label, value, note }) => (
@@ -62,32 +47,36 @@ const StatCard = ({ icon: Icon, label, value, note }) => (
 
 const AdminDashboard = () => {
   const [data] = useState(mockData);
+  const { users, loading, atoken } = useContext(AppContext);
 
-  // To use real data, add a protected admin route like GET /api/admin/dashboard
-  // that returns the same shape as mockData, then load it like this:
-  //
-  //   const { token, backendUrl } = useContext(AppContext);
-  //   const [data, setData] = useState(null);
-  //
-  //   useEffect(() => {
-  //     const loadDashboard = async () => {
-  //       try {
-  //         const res = await axios.get(backendUrl + "/api/admin/dashboard", { headers: { token } });
-  //         if (res.data.success) setData(res.data.dashboard);
-  //       } catch (error) {
-  //         toast.error(error.response?.data?.message || "Could not load the dashboard");
-  //       }
-  //     };
-  //     loadDashboard();
-  //   }, [token]);
-  //
-  //   if (!data) return <p>Loading...</p>;
+  // NOTE: users, loading, atoken come from real /api/admin/users data via context.
+  // Draws/winners/charity numbers are still mocked — add a
+  // GET /api/admin/dashboard endpoint returning { totalDraws, totalWinners, ... }
+  // and merge it in the same way once it exists.
 
-  const { stats, plans, nextDraw, recentUsers, pendingWinners } = data;
+  const { totalDraws, totalWinners, pendingVerifications, prizePaid, charityRaised, nextDraw, pendingWinners } = data;
 
-  const totalPlans = plans.basic + plans.pro;
-  const basicPercent = Math.round((plans.basic / totalPlans) * 100);
-  const proPercent = 100 - basicPercent;
+  // Derive real stats from the users array
+  const totalUsers = users.length;
+  const expiredCount = users.filter(isExpired).length;
+  const activeSubscriptions = totalUsers - expiredCount;
+
+  const basicCount = users.filter((u) => u.subscriptionPlan === "basic").length;
+  const proCount = users.filter((u) => u.subscriptionPlan === "pro").length;
+  const totalPlans = basicCount + proCount;
+  const basicPercent = totalPlans === 0 ? 0 : Math.round((basicCount / totalPlans) * 100);
+  const proPercent = totalPlans === 0 ? 0 : 100 - basicPercent;
+
+  // Most recently joined users, newest first
+  const recentUsers = [...users]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
+
+  const newUsersThisMonth = users.filter((u) => {
+    const created = new Date(u.createdAt);
+    const now = new Date();
+    return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+  }).length;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -101,37 +90,41 @@ const AdminDashboard = () => {
         <StatCard
           icon={Users}
           label="Total Users"
-          value={stats.totalUsers.toLocaleString("en-IN")}
-          note={`+${stats.newUsersThisMonth} this month`}
+          value={loading ? "…" : totalUsers.toLocaleString("en-IN")}
+          note={loading ? "" : `+${newUsersThisMonth} this month`}
         />
         <StatCard
           icon={CreditCard}
           label="Active Subscriptions"
-          value={stats.activeSubscriptions.toLocaleString("en-IN")}
-          note={`${Math.round((stats.activeSubscriptions / stats.totalUsers) * 100)}% of all users`}
+          value={loading ? "…" : activeSubscriptions.toLocaleString("en-IN")}
+          note={
+            loading || totalUsers === 0
+              ? ""
+              : `${Math.round((activeSubscriptions / totalUsers) * 100)}% of all users`
+          }
         />
         <StatCard
           icon={Ticket}
           label="Total Draws"
-          value={stats.totalDraws}
+          value={totalDraws}
           note={`Next draw: ${nextDraw.date}`}
         />
         <StatCard
           icon={Trophy}
           label="Total Winners"
-          value={stats.totalWinners}
-          note={`${stats.pendingVerifications} waiting for review`}
+          value={totalWinners}
+          note={`${pendingVerifications} waiting for review`}
         />
         <StatCard
           icon={Wallet}
           label="Prize Money Paid"
-          value={money(stats.prizePaid)}
+          value={money(prizePaid)}
           note="All draws so far"
         />
         <StatCard
           icon={Heart}
           label="Raised for Charities"
-          value={money(stats.charityRaised)}
+          value={money(charityRaised)}
           note="From subscriptions"
         />
       </div>
@@ -157,23 +150,37 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2.5 font-medium text-gray-900">{user.name}</td>
-                    <td className="py-2.5">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                          user.plan === "pro"
-                            ? "bg-emerald-100 text-[#0B5D3B]"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {user.plan}
-                      </span>
+                {loading ? (
+                  <tr>
+                    <td colSpan={3} className="py-6 text-center text-gray-400">
+                      Loading users...
                     </td>
-                    <td className="py-2.5 text-gray-600">{formatDate(user.joined)}</td>
                   </tr>
-                ))}
+                ) : recentUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="py-6 text-center text-gray-400">
+                      No users yet.
+                    </td>
+                  </tr>
+                ) : (
+                  recentUsers.map((user) => (
+                    <tr key={user._id} className="border-b border-gray-50 last:border-0">
+                      <td className="py-2.5 font-medium text-gray-900">{user.name}</td>
+                      <td className="py-2.5">
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                            user.subscriptionPlan === "pro"
+                              ? "bg-emerald-100 text-[#0B5D3B]"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {user.subscriptionPlan}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-gray-600">{formatDate(user.createdAt)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -224,13 +231,13 @@ const AdminDashboard = () => {
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-[#0B5D3B]" />
               <span className="text-gray-600">
-                Basic: <span className="font-semibold text-gray-900">{plans.basic}</span> ({basicPercent}%)
+                Basic: <span className="font-semibold text-gray-900">{basicCount}</span> ({basicPercent}%)
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-emerald-300" />
               <span className="text-gray-600">
-                Pro: <span className="font-semibold text-gray-900">{plans.pro}</span> ({proPercent}%)
+                Pro: <span className="font-semibold text-gray-900">{proCount}</span> ({proPercent}%)
               </span>
             </div>
           </div>
