@@ -4,6 +4,7 @@ import "dotenv/config";
 import { connectDatabase } from './Config/db.js';
 import { userRouter } from './Routes/userRoutes.js';
 import { connectCloudinary } from './Config/cloudinary.js';
+import { adminRouter } from './Routes/adminRouter.js';
 
 //app config
 const app = express()
@@ -19,6 +20,7 @@ connectDatabase()
 
 // api endpoints
 app.use('/api/user',userRouter)
+app.use("/api/admin",adminRouter)
 
 
 

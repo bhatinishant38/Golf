@@ -1,9 +1,9 @@
-import React from 'react'
+import { Outlet } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
 
-const Home = () => {
-  return (
-    <div>Home</div>
-  )
-}
+// Sidebar on the left, the current admin page on the right
+const Home = () => (
+<div></div>
+);
 
-export default Home
+export default Home;
