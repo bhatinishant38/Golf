@@ -48,14 +48,22 @@ export const addCharity = async (req, res) => {
     const { name, category, description, raised, members } = req.body;
     const imageFile = req.file;
 
-    if (!name?.trim() || !category?.trim() || !description?.trim() || !imageFile) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Name, category, description, and image are required",
-        });
+    if (
+      !name?.trim() ||
+      !category?.trim() ||
+      !description?.trim() ||
+      !imageFile
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, category, description, and image are required",
+      });
     }
+
+    // Upload image first
+    const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+      resource_type: "image",
+    });
 
     const charity = await charityModel.create({
       name: name.trim(),
@@ -63,15 +71,8 @@ export const addCharity = async (req, res) => {
       description: description.trim(),
       raised: Number(raised) || 0,
       members: Number(members) || 0,
+      image: imageUpload.secure_url,
     });
-
-    if (imageFile) {
-      const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
-        resource_type: "image",
-      });
-      const imageUrl = imageUpload.secure_url;
-      await charityModel.findByIdAndUpdate(charity._id, { image: imageUrl });
-    }
 
     return res.status(201).json({
       success: true,
@@ -79,9 +80,27 @@ export const addCharity = async (req, res) => {
       charity,
     });
   } catch (error) {
-    console.log(error.message);
-    return res
-      .status(500)
-      .json({ success: false, message: "Could not add charity" });
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not add charity",
+    });
   }
 };
+
+export const getAllCharity =async(req,res)=>{
+  try {
+    const charities = await charityModel.find()
+    res.status(200).json({ success: true, charities });
+    
+  } catch (error) {
+        console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not get charities",
+    });
+    
+  }
+}

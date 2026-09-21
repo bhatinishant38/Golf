@@ -8,6 +8,7 @@ import Sidebar from "./components/Sidebar";
 import Users from "./pages/Users";
 import { useContext } from "react";
 import { AppContext } from "./context/AppContext";
+import Charities from "./pages/Charities";
 
 // Stand-in for pages you haven't built yet, so the sidebar links don't open a blank screen.
 const ComingSoon = ({ title }) => (
@@ -26,7 +27,7 @@ const App = () => {
       <>
         <ToastContainer />
         <Routes>
-          <Route path="/login" element={<AdminLogin/>}></Route>
+          <Route path="/" element={<AdminLogin/>}></Route>
         </Routes>
       </>
     );
@@ -40,11 +41,11 @@ const App = () => {
 
       <main className="min-w-0 flex-1 p-4 md:p-8">
         <Routes>
-          <Route path="/" element={<AdminDashboard />} />
+          <Route path="/" element={<AdminDashboard />} />       
           <Route path="/users" element={<Users />} />
           <Route path="/subscriptions" element={<ComingSoon title="Subscriptions" />} />
           <Route path="/draws" element={<ComingSoon title="Draws" />} />
-          <Route path="/charities" element={<ComingSoon title="Charities" />} />
+          <Route path="/charities" element={<Charities/>} />
           <Route path="/winners" element={<ComingSoon title="Winners" />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
