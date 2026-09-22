@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Users, CreditCard, Ticket, Trophy, Wallet, Heart } from "lucide-react";
 import { AppContext } from "../context/AppContext";
@@ -47,7 +47,7 @@ const StatCard = ({ icon: Icon, label, value, note }) => (
 
 const AdminDashboard = () => {
   const [data] = useState(mockData);
-  const { users, loading, atoken } = useContext(AppContext);
+  const { users, loading, atoken ,loadusers} = useContext(AppContext);
 
   // NOTE: users, loading, atoken come from real /api/admin/users data via context.
   // Draws/winners/charity numbers are still mocked — add a
@@ -78,6 +78,7 @@ const AdminDashboard = () => {
     return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
   }).length;
 
+ 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>

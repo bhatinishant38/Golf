@@ -160,3 +160,22 @@ export const updateProfile = async (req, res) => {
       .json({ success: false, message: "Could not update profile" });
   }
 };
+
+
+export const fetchAllCharity = async (req, res) => {
+  try {
+    const charities = await charityModel.find().sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      charities,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not get charities",
+    });
+  }
+};

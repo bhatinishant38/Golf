@@ -1,31 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Plus } from "lucide-react";
 import CharityList from "../components/CharityList";
 import AddCharity from "../components/AddCharity";
-import { demoCharities } from "../Data/demo";
+
+import { AppContext } from "../context/AppContext";
 
 // Main Admin Page - composes the 2 components
 const Charities = ({ token, backendUrl }) => {
-  const [charities, setCharities] = useState(demoCharities);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCharity, setEditingCharity] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState("");
 
-  const fetchCharities = async () => {
-    try {
-      const url = backendUrl ? `${backendUrl}/api/charities` : "/api/charities";
-      const { data } = await axios.get(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const list = Array.isArray(data) ? data : data.charities || [];
-      if (list.length > 0) setCharities(list);
-    } catch (err) {
-      console.log("Using demo charities");
-    }
-  };
+  const {fetchCharities,charities ,setCharities} = useContext(AppContext)
 
   useEffect(() => {
     fetchCharities();

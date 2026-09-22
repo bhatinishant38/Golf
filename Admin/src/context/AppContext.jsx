@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createContext } from "react";
 import { toast } from "react-toastify";
 
@@ -57,6 +57,12 @@ const fetchCharities = async () => {
   }
 };
 
+useEffect(()=>{
+  if(atoken){
+    loadusers()
+  }
+
+},[atoken])
 
   const value = {
     backendUrl,

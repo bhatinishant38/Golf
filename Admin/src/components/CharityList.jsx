@@ -1,16 +1,18 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import CharityCard from "./CharityCard";
 import { categories } from "../Data/demo";
+import { AppContext } from "../context/AppContext";
 
 
 const VISIBLE_COUNT = 6;
 
 // Component 2: Charity List - handles search, filter, grid, show more
-const CharityList = ({ charities, onEdit, onDelete, deletingId }) => {
+const CharityList = ({  onEdit, onDelete, deletingId }) => {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [showAll, setShowAll] = useState(false);
+  const {charities} =useContext(AppContext)
 
   const filtered = useMemo(() => {
     return charities.filter((c) => {
@@ -28,7 +30,7 @@ const CharityList = ({ charities, onEdit, onDelete, deletingId }) => {
   return (
     <div>
       {/* Search */}
-      <div className="relative max-w-[480px]">
+      <div className="relative max-w-120">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="search"

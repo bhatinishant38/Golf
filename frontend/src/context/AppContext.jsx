@@ -1,5 +1,5 @@
 import axios from "axios";
-import { createContext, useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export const AppContext = createContext();
@@ -36,6 +36,7 @@ export function AppContextProvider({ children }) {
   const [profileData, setProfileData] = useState(null);
   const [scores, setScores] = useState([]);
   const [scoresLoading, setScoresLoading] = useState(true);
+  const [charities ,setCharities] = useState([])
 
   // One place to handle failed requests:
   // a 401 means the token is missing or expired, so log the user out.
@@ -170,6 +171,26 @@ export function AppContextProvider({ children }) {
     }
   }, [token, getUserProfile, getScores]);
 
+
+  //fetchchariies
+  const fetchCharities = async () => {
+    try {
+      const { data } = await axios.get(
+        backendUrl + "/api/admin/fetch-charities",
+        {
+          headers: { token },
+        }
+      );
+      if (data.success) {
+        setCharities(data.charities);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   const value = {
     backendUrl,
     token,
@@ -186,6 +207,8 @@ export function AppContextProvider({ children }) {
     addScore,
     updateScore,
     deleteScore,
+    fetchCharities,
+    charities
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

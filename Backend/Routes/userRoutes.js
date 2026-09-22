@@ -7,6 +7,7 @@ import {
   registerUser,
   getProfile,
   updateProfile,
+  fetchAllCharity,
 } from "../controllers/userController.js";
 import { addScore, deleteScore,  getScores, updateScore } from "../controllers/scoreController.js";
 
@@ -22,4 +23,5 @@ userRouter.get("/get-scores", authUser, getScores);
 userRouter.post("/add-score", authUser, addScore);
 userRouter.post("/update-score/:id", authUser, updateScore);
 userRouter.delete("/delete-score/:id", authUser, deleteScore);
+adminRouter.get('/fetch-charities',authUser,fetchAllCharity)
 
