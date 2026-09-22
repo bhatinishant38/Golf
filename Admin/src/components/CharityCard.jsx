@@ -67,7 +67,7 @@ const CharityCard = ({ charity, onEdit, onDelete, isDeleting }) => {
 
         <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
           <div className="bg-black/60 backdrop-blur text-white px-2.5 py-1 rounded-full text-[11px] font-semibold">
-            ${Number(charity.raised || 0).toLocaleString()} raised
+            ₹{Number(charity.raised || 0).toLocaleString()} raised
           </div>
           <div className="bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-medium text-gray-700">
             {Number(charity.members || 0).toLocaleString()} members

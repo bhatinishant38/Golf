@@ -5,7 +5,7 @@ const plans = [
   {
     id: "monthly",
     name: "Monthly plan",
-    price: "$9.99",
+    price: "₹10000",
     period: "/month",
     description: "Flexible monthly membership.",
     features: [
@@ -19,7 +19,7 @@ const plans = [
   {
     id: "yearly",
     name: "Yearly plan",
-    price: "$59.99",
+    price: "₹96000",
     period: "/year",
     description: "Save more with yearly membership.",
     features: [

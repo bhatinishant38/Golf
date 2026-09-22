@@ -136,7 +136,7 @@ const Charities = ({ token, backendUrl }) => {
             </span>
           </div>
           <p className="mt-1 text-[13px] text-gray-500">
-            Choose a charity and make a difference. • ${totalRaised.toLocaleString()} raised • {totalMembers.toLocaleString()} members
+            Choose a charity and make a difference. • ₹{totalRaised.toLocaleString()} raised • {totalMembers.toLocaleString()} members
           </p>
         </div>
         <button

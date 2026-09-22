@@ -18,7 +18,7 @@ const AddCharity = ({ isOpen, onClose, onSubmit, editingCharity, saving }) => {
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef(null);
-  const {backendUrl,atoken}  = useContext(AppContext)
+  const {backendUrl,atoken,categories}  = useContext(AppContext)
   
   useEffect(() => {
     if (editingCharity) {

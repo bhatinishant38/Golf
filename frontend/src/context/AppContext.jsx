@@ -177,7 +177,7 @@ export function AppContextProvider({ children }) {
   const fetchCharities = async () => {
     try {
       const { data } = await axios.get(
-        backendUrl + "/api/admin/fetch-charities",
+        backendUrl + "/api/user/fetch-charities",
         {
           headers: { token },
         }
@@ -208,7 +208,7 @@ export function AppContextProvider({ children }) {
     addScore,
     updateScore,
     deleteScore,
-    fetchCharities,
+  fetchCharities  ,
     charities,
     categories
   };

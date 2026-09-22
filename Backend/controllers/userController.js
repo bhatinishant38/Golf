@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { userModel } from "../models/userModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import charityModel from "../models/charityModel.js";
 
 export const registerUser = async (req, res) => {
   try {

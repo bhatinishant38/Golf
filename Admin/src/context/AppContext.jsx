@@ -22,7 +22,7 @@ export const AppContextProvider = ({ children }) => {
         headers: { atoken },
       });
       if (data.success) {
-        console.log(data.users);
+       
         setUsers(data.users);
       } else {
         toast.error(data.message);
