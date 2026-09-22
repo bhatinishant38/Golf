@@ -1,5 +1,6 @@
 import express from "express";
-import { authUser } from "../middleware/authUser.js";
+
+
 import { upload } from "../Middleware/multer.js";
 
 import {
@@ -10,6 +11,8 @@ import {
   fetchAllCharity,
 } from "../controllers/userController.js";
 import { addScore, deleteScore,  getScores, updateScore } from "../controllers/scoreController.js";
+import { authUser } from "../Middleware/authUser.js";
+
 
 
 export const userRouter = express.Router();
@@ -24,4 +27,5 @@ userRouter.post("/add-score", authUser, addScore);
 userRouter.post("/update-score/:id", authUser, updateScore);
 userRouter.delete("/delete-score/:id", authUser, deleteScore);
 userRouter.get('/fetch-charities',authUser,fetchAllCharity)
+
 

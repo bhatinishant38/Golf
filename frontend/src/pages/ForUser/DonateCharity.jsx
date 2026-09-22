@@ -16,8 +16,6 @@ export default function DonateCharity() {
   const [amount, setAmount] = useState(500);
   const [customAmount, setCustomAmount] = useState("");
   const [donating, setDonating] = useState(false);
-  const [donorName, setDonorName] = useState("");
-  const [donorEmail, setDonorEmail] = useState("");
 
   const presetAmounts = [100, 500, 1000, 2500, 5000];
 
@@ -35,7 +33,7 @@ export default function DonateCharity() {
   useEffect(() => {
     const fetchCharity = async () => {
       if (charity) return;
-      const fromContext = charities.find(c => c._id === id);
+      const fromContext = charities.find((c) => c._id === id);
       if (fromContext) {
         setCharity(fromContext);
         setLoading(false);
@@ -55,26 +53,32 @@ export default function DonateCharity() {
     fetchCharity();
   }, [id]);
 
-  const getFinalAmount = () => customAmount ? Number(customAmount) : amount;
+  const getFinalAmount = () => (customAmount ? Number(customAmount) : amount);
 
   const handleRazorpayDonate = async () => {
     const finalAmount = getFinalAmount();
-    
+
     if (!finalAmount || finalAmount < 10) {
       toast.error("Enter valid amount (min ₹10)");
+      return;
+    }
+
+    if (!token) {
+      toast.error("Please log in to donate");
       return;
     }
 
     setDonating(true);
     try {
       // 1. Create Razorpay order from backend
+      // Route: POST /api/donation/create-order (authUser)
       const { data: orderData } = await axios.post(
-        `${backendUrl}/api/donation/create-order`,
+        `${backendUrl}/api/user/create-order`,
         {
           charityId: id,
           amount: finalAmount, // in INR
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { token } }
       );
 
       if (!orderData.success) {
@@ -85,46 +89,41 @@ export default function DonateCharity() {
 
       // 2. Open Razorpay checkout
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || orderData.key_id, // Your Razorpay Key ID
+        key: orderData.key_id || import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: orderData.order.amount, // in paise
-        currency: "INR",
+        currency: orderData.order.currency,
         name: "Digital Heroes Charity",
         description: `Donation to ${charity.name}`,
         image: charity.image,
         order_id: orderData.order.id,
         handler: async function (response) {
           // 3. Verify payment on backend
+          // Route: POST /api/donation/verify-payment (authUser)
           try {
             const { data: verifyData } = await axios.post(
-              `${backendUrl}/api/donation/verify-payment`,
+              `${backendUrl}/api/user/verify-payment`,
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 charityId: id,
                 amount: finalAmount,
-                donorName,
-                donorEmail,
               },
-              { headers: { Authorization: `Bearer ${token}` } }
+              { headers: { token } }
             );
 
             if (verifyData.success) {
               toast.success(`Thank you! ₹${finalAmount} donated to ${charity.name} ❤️`);
               navigate("/userhome/charity", { state: { donated: true } });
             } else {
-              toast.error("Payment verification failed");
+              toast.error(verifyData.message || "Payment verification failed");
             }
           } catch (err) {
-            toast.error("Payment verification failed");
+            toast.error(err.response?.data?.message || "Payment verification failed");
             console.error(err);
           } finally {
             setDonating(false);
           }
-        },
-        prefill: {
-          name: donorName || "Donor",
-          email: donorEmail || "donor@example.com",
         },
         notes: {
           charityId: id,
@@ -144,7 +143,6 @@ export default function DonateCharity() {
         setDonating(false);
       });
       rzp.open();
-
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to create donation order");
@@ -178,9 +176,9 @@ export default function DonateCharity() {
           {/* Left - Charity Details (3 cols) */}
           <div className="lg:col-span-3 space-y-5">
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="h-[300px] overflow-hidden relative">
+              <div className="h-75 overflow-hidden relative">
                 <img src={charity.image} alt={charity.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent"></div>
                 <div className="absolute bottom-4 left-4 right-4">
                   <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[11px] font-bold text-gray-800">
                     {charity.category}
@@ -188,14 +186,14 @@ export default function DonateCharity() {
                   <h1 className="mt-2 text-2xl font-bold text-white">{charity.name}</h1>
                 </div>
               </div>
-              
+
               <div className="p-6">
                 <h3 className="font-semibold text-gray-900">About this cause</h3>
                 <p className="mt-2 text-[14px] text-gray-600 leading-relaxed">{charity.description}</p>
 
                 <div className="mt-5 grid grid-cols-3 gap-3">
                   <div className="bg-[#f6f8f6] rounded-xl p-3 text-center">
-                    <p className="text-[18px] font-bold text-[#0B5D3B]">₹{Number(charity.raised).toLocaleString('en-IN')}</p>
+                    <p className="text-[18px] font-bold text-[#0B5D3B]">₹{Number(charity.raised).toLocaleString("en-IN")}</p>
                     <p className="text-[11px] text-gray-500">Raised</p>
                   </div>
                   <div className="bg-[#f6f8f6] rounded-xl p-3 text-center">
@@ -233,35 +231,16 @@ export default function DonateCharity() {
                 <Heart size={18} className="text-[#0B5D3B] fill-[#0B5D3B]" /> Donate to {charity.name}
               </h2>
 
-              {/* Donor info */}
-              <div className="mt-4 space-y-3">
-                <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Your Name</label>
-                  <input
-                    value={donorName}
-                    onChange={e => setDonorName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-[13px] outline-none focus:border-[#0B5D3B] focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Email (for receipt)</label>
-                  <input
-                    value={donorEmail}
-                    onChange={e => setDonorEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-[13px] outline-none focus:border-[#0B5D3B] focus:ring-2 focus:ring-emerald-100"
-                  />
-                </div>
-              </div>
-
               <div className="mt-5">
                 <label className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Select Amount</label>
                 <div className="grid grid-cols-3 gap-2 mt-2">
-                  {[100, 500, 1000, 2500, 5000].map(amt => (
+                  {presetAmounts.map((amt) => (
                     <button
                       key={amt}
-                      onClick={() => { setAmount(amt); setCustomAmount(""); }}
+                      onClick={() => {
+                        setAmount(amt);
+                        setCustomAmount("");
+                      }}
                       className={`py-2.5 rounded-xl border text-[13px] font-semibold transition ${
                         amount === amt && !customAmount
                           ? "bg-[#0B5D3B] text-white border-[#0B5D3B]"
@@ -282,7 +261,7 @@ export default function DonateCharity() {
                     type="number"
                     min="10"
                     value={customAmount}
-                    onChange={e => setCustomAmount(e.target.value)}
+                    onChange={(e) => setCustomAmount(e.target.value)}
                     placeholder="Enter custom amount"
                     className="w-full rounded-xl border border-gray-200 pl-9 pr-4 py-3 text-[14px] outline-none focus:border-[#0B5D3B] focus:ring-2 focus:ring-emerald-100"
                   />
@@ -292,11 +271,13 @@ export default function DonateCharity() {
               <div className="mt-5 p-3 bg-[#f6f8f6] rounded-xl">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Donation</span>
-                  <span className="font-bold">₹{getFinalAmount().toLocaleString('en-IN')}</span>
+                  <span className="font-bold">₹{getFinalAmount().toLocaleString("en-IN")}</span>
                 </div>
                 <div className="flex justify-between text-[11px] text-gray-400 mt-1">
                   <span>To: {charity.name}</span>
-                  <span className="flex items-center gap-1"><Users size={12} /> {charity.members} supporters</span>
+                  <span className="flex items-center gap-1">
+                    <Users size={12} /> {charity.members} supporters
+                  </span>
                 </div>
               </div>
 
@@ -305,9 +286,11 @@ export default function DonateCharity() {
                 disabled={donating}
                 className="mt-5 w-full bg-[#0B5D3B] text-white py-3.5 rounded-xl text-[14px] font-bold hover:bg-[#094d31] disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-sm"
               >
-                {donating ? "Opening Razorpay..." : (
+                {donating ? (
+                  "Opening Razorpay..."
+                ) : (
                   <>
-                    <Heart size={18} className="fill-white" /> Donate ₹{getFinalAmount().toLocaleString('en-IN')} with Razorpay
+                    <Heart size={18} className="fill-white" /> Donate ₹{getFinalAmount().toLocaleString("en-IN")} with Razorpay
                   </>
                 )}
               </button>
