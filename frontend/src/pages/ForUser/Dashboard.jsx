@@ -10,7 +10,7 @@ import CharityBanner from "../../components/ForUser/CharityBanner";
 
 // Mock data. Replace with the response from your backend (see useEffect below).
 const mockData = {
-  user: { name: "Nishant", image: "" },
+  user: { name: "User", image: "" },
   stats: { totalScores: 5, drawEntries: 3, charityContribution: 25 },
   
   nextDraw: { date: "01 Oct 2026", prize: "$1,25,000" },
