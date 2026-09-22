@@ -30,6 +30,7 @@ const scoreRoutes = {
 
 export function AppContextProvider({ children }) {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const categories = ["All", "Education", "Healthcare", "Environment", "Food & Hunger", "Animal Welfare", "Disaster Relief"];
 
   // "" means logged out (always a string, so we never mix false and "")
   const [token, setToken] = useState(() => localStorage.getItem("token") || "");
@@ -208,7 +209,8 @@ export function AppContextProvider({ children }) {
     updateScore,
     deleteScore,
     fetchCharities,
-    charities
+    charities,
+    categories
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -16,9 +16,9 @@ import { AppContext } from "../context/AppContext";
 const links = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/users", label: "Users", icon: Users },
+  { to: "/charities", label: "Charities", icon: Heart },
   { to: "/subscriptions", label: "Subscriptions", icon: CreditCard },
   { to: "/draws", label: "Draws", icon: Ticket },
-  { to: "/charities", label: "Charities", icon: Heart },
   { to: "/winners", label: "Winners", icon: Trophy },
   
 ];

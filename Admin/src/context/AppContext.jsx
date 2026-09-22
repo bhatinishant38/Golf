@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
+  const categories = ["All", "Education", "Healthcare", "Environment", "Food & Hunger", "Animal Welfare", "Disaster Relief"];
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -75,7 +76,8 @@ useEffect(()=>{
     setUsers,
     fetchCharities,
     charities ,
-    setCharities
+    setCharities,
+    categories
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
-import { categories } from "../Data/demo";
+
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";

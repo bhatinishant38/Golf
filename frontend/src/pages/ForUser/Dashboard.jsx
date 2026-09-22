@@ -1,13 +1,11 @@
 import React, { useContext } from "react";
 import { Target, Ticket, Heart } from "lucide-react";
-
 import Header from "../../components/ForUser/Header";
-
 import StatCard from "../../components/ForUser/StatCard";
 import LatestScores from "../../components/ForUser/LatestScores";
 import NextDraw from "../../components/ForUser/NextDraw";
-import CharityBanner from "../../components/ForAll/CharityBanner";
 import { AppContext } from "../../context/AppContext";
+import CharityBanner from "../../components/ForUser/CharityBanner";
 
 
 // Mock data. Replace with the response from your backend (see useEffect below).

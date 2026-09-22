@@ -23,5 +23,5 @@ userRouter.get("/get-scores", authUser, getScores);
 userRouter.post("/add-score", authUser, addScore);
 userRouter.post("/update-score/:id", authUser, updateScore);
 userRouter.delete("/delete-score/:id", authUser, deleteScore);
-adminRouter.get('/fetch-charities',authUser,fetchAllCharity)
+userRouter.get('/fetch-charities',authUser,fetchAllCharity)
 
