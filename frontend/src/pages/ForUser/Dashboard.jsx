@@ -23,7 +23,6 @@ const Dashboard = () => {
 
   const { user, stats,  nextDraw, charity } = data;
   
-
   return (
     <main className="flex-1 space-y-6 p-8">
       <Header user={user} />
