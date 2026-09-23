@@ -8,7 +8,7 @@ import { AppContext } from "../../context/AppContext";
 import CharityBanner from "../../components/ForUser/CharityBanner";
 
 
-// Mock data. Replace with the response from your backend (see useEffect below).
+
 const mockData = {
   user: { name: "User", image: "" },
   stats: { totalScores: 5, drawEntries: 3, charityContribution: 25 },
